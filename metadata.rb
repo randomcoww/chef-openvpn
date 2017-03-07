@@ -1,0 +1,7 @@
+name             'openvpn'
+maintainer       'YOUR_NAME'
+maintainer_email 'YOUR_EMAIL'
+license          'All rights reserved'
+description      'Installs/Configures openvpn'
+long_description 'Installs/Configures openvpn'
+version          '0.1.0'
