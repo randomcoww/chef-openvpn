@@ -30,12 +30,12 @@ module ConfigGenerator
     out = []
 
     config_hash.each do |k, v|
-      when v
-      case Array
+      case v
+      when Array
         out << ([k] + v).join(' ')
-      elsif String,Integer
+      when String,Integer
         out << [k, v].join(' ')
-      elsif TrueClass
+      when TrueClass
         out << k
       end
     end
