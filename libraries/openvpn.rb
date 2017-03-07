@@ -43,11 +43,11 @@ module ConfigGenerator
 end
 
 module OpenvpnClient
-  CONFIG_PATH ||= '/etc/openvpn/client/client.conf'
+  CONFIG_PATH ||= '/etc/openvpn/client.conf'
 end
 
 module OpenvpnServer
-  CONFIG_PATH ||= '/etc/openvpn/server/server.conf'
+  CONFIG_PATH ||= '/etc/openvpn/server.conf'
 end
 
 class Chef::Recipe
