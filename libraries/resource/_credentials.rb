@@ -12,7 +12,7 @@ class ChefOpenvpn
 
       property :data_bag, String
       property :data_bag_item, String
-      property :key, Array, default: []
+      property :key, String
 
       property :content, String, default: lazy { to_conf }
       property :path, String
@@ -20,22 +20,10 @@ class ChefOpenvpn
       private
 
       def to_conf
-        rndc_keys = []
-
-        resource = Dbag::Keystore.new(
+        Dbag::Keystore.new(
           data_bag,
           data_bag_item
-        )
-        resource.get(name)
-
-        rndc_key_names.sort.each do |k|
-          rndc_keys << {
-            'name' => k,
-            'secret' => keys_resource.get_or_create(k, SecureRandom.base64)
-          }.merge(key_options)
-        end
-
-        generate_config({'key' => rndc_keys})
+        ).get(key)
       end
     end
   end
