@@ -17,6 +17,10 @@ class ChefOpenvpn
       property :content, String, default: lazy { to_conf }
       property :path, String
 
+      def provider
+        ChefOpenvpn::Provider::Credentials
+      end
+
       private
 
       def to_conf
