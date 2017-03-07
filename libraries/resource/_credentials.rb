@@ -24,10 +24,14 @@ class ChefOpenvpn
       private
 
       def to_conf
-        Dbag::Keystore.new(
+        content = Dbag::Keystore.new(
           data_bag,
           data_bag_item
         ).get(key)
+        if content.is_a?(Array)
+          content = content.join($/)
+        end
+        content
       end
     end
   end
