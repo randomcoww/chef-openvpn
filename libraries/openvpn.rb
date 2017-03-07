@@ -42,3 +42,16 @@ module ConfigGenerator
     return out.join($/)
   end
 end
+
+module OpenvpnClient
+  CONFIG_PATH ||= '/etc/openvpn/client/client.conf'
+end
+
+module OpenvpnServer
+  CONFIG_PATH ||= '/etc/openvpn/server/server.conf'
+end
+
+class Chef::Recipe
+  include OpenvpnClient
+  include OpenvpnServer
+end
