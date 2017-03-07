@@ -4,7 +4,7 @@ class ChefOpenvpn
       provides :openvpn_config, os: "linux"
 
       def load_current_resource
-        @current_resource = ChefNsd::Resource::Config.new(new_resource.name)
+        @current_resource = ChefOpenvpn::Resource::Config.new(new_resource.name)
 
         current_resource.exists(::File.exist?(new_resource.path))
 
@@ -19,13 +19,13 @@ class ChefOpenvpn
 
       def action_create
         converge_by("Create OpenVPN config: #{new_resource}") do
-          nsd_config.run_action(:create)
+          openvpn_config.run_action(:create)
         end if !current_resource.exists || current_resource.content != new_resource.content
       end
 
       def action_delete
         converge_by("Delete OpenVPN config: #{new_resource}") do
-          nsd_config.run_action(:delete)
+          openvpn_config.run_action(:delete)
         end if current_resource.exists
       end
 
