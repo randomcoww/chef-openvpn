@@ -48,7 +48,9 @@ end
 
 module OpenvpnServer
   CONFIG_PATH ||= '/etc/openvpn/server.conf'
+end
 
+module OpenVpnDataBag
   class EasyRsa
     include Dbag
 
@@ -75,8 +77,7 @@ module OpenvpnServer
     # }
 
 
-    def initialize(name, data_bag, data_bag_item, vars={})
-      @name = name
+    def initialize(data_bag, data_bag_item, vars={})
       @dbag = Dbag::Keystore.new(data_bag, data_bag_item)
       @vars = vars
     end
@@ -186,7 +187,7 @@ module OpenvpnServer
     def cadir
       return @cadir unless @cadir.nil?
 
-      @cadir = ::File.join(Chef::Config[:cache_file_path], @name)
+      @cadir = ::File.join(Chef::Config[:cache_file_path], 'openvpn')
       shell_out!("make-cadir #{@cadir}")
       ## need to link openssl-*.cnf to openssl.cnf so that build-ca can find it.
       ## find latest version
