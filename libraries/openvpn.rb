@@ -183,7 +183,7 @@ module OpenvpnConfig
     def cadir
       return @cadir unless @cadir.nil?
 
-      @cadir = ::File.join(Chef::Config[:cache_file_path], 'openvpn')
+      @cadir = ::File.join(Chef::Config[:file_cache_path], 'openvpn')
       shell_out!("make-cadir #{@cadir}")
       ## need to link openssl-*.cnf to openssl.cnf so that build-ca can find it.
       ## find latest version
