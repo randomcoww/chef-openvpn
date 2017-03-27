@@ -4,7 +4,7 @@ class ChefOpenvpn
       resource_name :openvpn_config_client
 
       property :path, String, desired_state: false,
-                              default: lazy { Openvpn::CLIENT_CONFIG }
+                              default: lazy { OpenvpnConfig::CLIENT_CONFIG }
     end
   end
 end

@@ -1,7 +1,7 @@
 class ChefOpenvpn
   class Resource
     class EasyRsa < Chef::Resource
-      include Openvpn
+      include OpenvpnConfig
 
       resource_name :openvpn_easy_rsa
 
@@ -18,7 +18,7 @@ class ChefOpenvpn
 
       property :content, String, default: lazy { to_conf }
       property :path, String, desired_state: false,
-                              default: lazy { ::File.join(Openvpn::BASE_PATH, name) }
+                              default: lazy { ::File.join(OpenvpnConfig::BASE_PATH, name) }
 
       def provider
         ChefOpenvpn::Provider::Credentials
@@ -27,7 +27,7 @@ class ChefOpenvpn
       private
 
       def easy_rsa
-        @easy_rsa ||= EasyRsa.new(data_bag, data_bag_item, cert_variables)
+        @easy_rsa ||= EasyRsaHelper.new(data_bag, data_bag_item, cert_variables)
       end
 
       def ca_crt
