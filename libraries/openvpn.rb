@@ -191,7 +191,7 @@ module OpenvpnConfig
       ::Dir.entries(cadir).each do |e|
         openssl_confs << e if e =~ /^openssl-*.cnf$/
       end
-      ::File.link(openssl.sort.last, 'openssl.cnf')
+      ::File.link(openssl_confs.sort.last, 'openssl.cnf')
 
       shell_out!("source vars")
 
