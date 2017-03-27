@@ -78,7 +78,25 @@ module OpenvpnConfig
 
     def initialize(data_bag, data_bag_item, vars={})
       @dbag = Dbag::Keystore.new(data_bag, data_bag_item)
-      @vars = vars
+      @cadir = ::File.join(Chef::Config[:file_cache_path], SecureRandom.hex)
+
+      ## these are normally set by ./vars
+      @vars = {
+        "EASY_RSA" => @cadir,
+        "OPENSSL" => "openssl",
+        "PKCS11TOOL" => "pkcs11-tool",
+        "GREP" => "grep",
+        "KEY_CONFIG" => ::File.join(@cadir, 'openssl-1.0.0.cnf'),
+        "KEY_DIR" => ::File.join(@cadir, 'keys'),
+        "PKCS11_MODULE_PATH" => "dummy",
+        "PKCS11_PIN" => "dummy",
+        "KEY_SIZE" => "2048",
+        "CA_EXPIRE" => "3650",
+        "KEY_EXPIRE" => "3560",
+        "KEY_NAME" => "EasyRsa"
+      }.merge(vars)
+
+      Chef::Log.info("Start EasyRSA in #{@cadir}")
     end
 
 
@@ -100,10 +118,12 @@ module OpenvpnConfig
 
       if dh_pem.nil?
 
-        Dir.chdir(cadir)
-        out = shell_out!("/bin/sh build-dh")
+        Dir.chdir(@cadir)
+        out = shell_out!("/bin/sh build-dh",
+          env: @vars
+        )
 
-        dh_pem = ::File.read(::File.join('keys', 'dh2048.pem'))
+        dh_pem = ::File.read(::File.join('keys', "dh#{@vars["KEY_SIZE"]}.pem"))
         @dbag.put('dh.pem', dh_pem)
       end
 
@@ -151,7 +171,7 @@ module OpenvpnConfig
       certs[name] ||= {}
       if certs[name]["key"].nil? || certs[name]["crt"].nil?
 
-        Dir.chdir(cadir)
+        Dir.chdir(@cadir)
         yield
 
         certs[name]["key"] = ::File.read(::File.join('keys', "#{name}.key"))
@@ -172,7 +192,7 @@ module OpenvpnConfig
 
       if ca_crt.nil? || ca_key.nil?
 
-        Dir.chdir(cadir)
+        Dir.chdir(@cadir)
         ## merge the extra env variables here
         out = shell_out!("/bin/sh pkitool --initca",
           env: @vars
@@ -204,26 +224,20 @@ module OpenvpnConfig
     ## generate cadir and prep to generate keys
     def prep_cadir
       cleanup
+      shell_out!("/usr/bin/make-cadir #{@cadir}")
 
-      shell_out!("/usr/bin/make-cadir #{cadir}")
-
-      Dir.chdir(cadir)
-      ## need to link openssl-*.cnf to openssl.cnf so that build-ca can find it.
-      ::File.link('openssl-1.0.0.cnf', 'openssl.cnf')
-
-      shell_out!(". ./vars")
-      shell_out!("/bin/sh clean-all")
+      Dir.chdir(@cadir)
+      # shell_out!(". ./vars")
+      shell_out!("/bin/sh clean-all",
+        env: @vars
+      )
     end
 
     ## remove cadir
     def cleanup
-      if ::File.directory?(cadir)
-        ::FileUtils.rm_rf(cadir)
+      if ::File.directory?(@cadir)
+        ::FileUtils.rm_rf(@cadir)
       end
-    end
-
-    def cadir
-      @cadir ||= ::File.join(Chef::Config[:file_cache_path], 'openvpn')
     end
   end
 end
