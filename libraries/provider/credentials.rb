@@ -32,7 +32,7 @@ class ChefOpenvpn
       private
 
       def credentials_file
-        @unbound_config ||= Chef::Resource::File.new(new_resource.path, run_context).tap do |r|
+        @credentials_file ||= Chef::Resource::File.new(new_resource.path, run_context).tap do |r|
           r.path new_resource.path
           r.sensitive true
           r.content new_resource.content
