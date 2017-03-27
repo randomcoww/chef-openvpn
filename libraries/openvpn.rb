@@ -42,15 +42,11 @@ module ConfigGenerator
   end
 end
 
-module OpenvpnClient
-  CONFIG_PATH ||= '/etc/openvpn/client.conf'
-end
+module Openvpn
+  BASE_PATH ||= '/etc/openvpn'
+  SERVER_CONFIG ||= '/etc/openvpn/server.conf'
+  CLIENT_CONFIG ||= '/etc/openvpn/client.conf'
 
-module OpenvpnServer
-  CONFIG_PATH ||= '/etc/openvpn/server.conf'
-end
-
-module OpenVpnDataBag
   class EasyRsa
     include Dbag
 
@@ -210,6 +206,5 @@ end
 
 
 class Chef::Recipe
-  include OpenvpnClient
-  include OpenvpnServer
+  include Openvpn
 end
