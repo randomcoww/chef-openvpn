@@ -43,11 +43,14 @@ module ConfigGenerator
 end
 
 module OpenvpnConfig
+
   BASE_PATH ||= '/etc/openvpn'
   SERVER_CONFIG ||= '/etc/openvpn/server.conf'
   CLIENT_CONFIG ||= '/etc/openvpn/client.conf'
 
   class EasyRsaHelper
+
+    include Chef::Mixin::ShellOut
     include Dbag
 
     ## structure
@@ -82,12 +85,98 @@ module OpenvpnConfig
     ## generate keys/ca.crt keys/ca.key. grab from data bag if it is there
     ## create if it doesn't exist and write to data bag
     def generate_ca_cert
+      cert = prep_ca_cert
+
+      return cert
+    ensure
+      cleanup
+    end
+
+    ## generate dh.pem
+    def generate_dh
+      prep_cadir
+
+      dh_pem = @dbag.get('dh.pem')
+
+      if dh_pem.nil?
+
+        Dir.chdir(cadir)
+        out = shell_out!("/bin/sh build-dh")
+
+        dh_pem = ::File.read(::File.join('keys', 'dh2048.pem'))
+        @dbag.put('dh.pem', dh_pem)
+      end
+
+      return dh_pem
+    ensure
+      cleanup
+    end
+
+    ## generate server.key, server.crt
+    def generate_server_cert(name)
+      prep_ca_cert
+
+      cert = generate_cert("servers", name) {
+        shell_out!("/bin/sh pkitool --server #{name}",
+          env: @vars
+        )}
+
+      return cert
+    ensure
+      cleanup
+    end
+
+    ## generate client.key, client.crt
+    def generate_client_cert(name)
+      prep_ca_cert
+
+      cert = generate_cert("clients", name) {
+        shell_out!("/bin/sh pkitool #{name}",
+          env: @vars
+        )}
+
+      return cert
+    ensure
+      cleanup
+    end
+
+
+
+    private
+
+    ## user CA to generate server or client keys
+    def generate_cert(type, name)
+      certs = @dbag.get(type) || {}
+
+      certs[name] ||= {}
+      if certs[name]["key"].nil? || certs[name]["crt"].nil?
+
+        Dir.chdir(cadir)
+        yield
+
+        certs[name]["key"] = ::File.read(::File.join('keys', "#{name}.key"))
+        certs[name]["crt"] = ::File.read(::File.join('keys', "#{name}.crt"))
+
+        @dbag.put(type, certs)
+      end
+
+      return certs[name]
+    end
+
+    ## create or get CA cert, leave files for use
+    def prep_ca_cert
+      prep_cadir
+
       ca_crt = @dbag.get('ca.crt')
       ca_key = @dbag.get('ca.key')
 
-      Dir.chdir(cadir)
       if ca_crt.nil? || ca_key.nil?
-        shell_out!("/bin/sh pkitool --initca")
+
+        Dir.chdir(cadir)
+        ## merge the extra env variables here
+        out = shell_out!("/bin/sh pkitool --initca",
+          env: @vars
+        )
 
         ca_crt = ::File.read(::File.join('keys', 'ca.crt'))
         ca_key = ::File.read(::File.join('keys', 'ca.key'))
@@ -100,6 +189,10 @@ module OpenvpnConfig
         @dbag.delete('clients')
       else
 
+        if !::File.directory?('keys')
+          ::FileUtils.mkdir('keys')
+        end
+
         ## these are needed to create server and client keys
         ::File.write(::File.join('keys', 'ca.crt'), ca_crt)
         ::File.write(::File.join('keys', 'ca.key'), ca_key)
@@ -108,72 +201,21 @@ module OpenvpnConfig
       return ca_crt
     end
 
+    ## generate cadir and prep to generate keys
+    def prep_cadir
+      cleanup
 
-    ## generate dh.pem
-    def generate_dh
-      dh_pem = @dbag.get('dh.pem')
+      shell_out!("/usr/bin/make-cadir #{cadir}")
 
       Dir.chdir(cadir)
-      if dh_pem.nil?
-        shell_out!("/bin/sh build-dh")
+      ## need to link openssl-*.cnf to openssl.cnf so that build-ca can find it.
+      ::File.link('openssl-1.0.0.cnf', 'openssl.cnf')
 
-        dh_pem = ::File.read(::File.join('keys', 'dh2048.pem'))
-        @dbag.put('dh.pem', dh_pem)
-      else
-        ::File.write(::File.join('keys', 'dh2048.pem'), dh_pem)
-      end
+      shell_out!(". ./vars")
+      shell_out!("/bin/sh clean-all")
     end
 
-
-    ## generate server.key, server.crt
-    def generate_server_cert(name)
-      servers = @dbag.get("servers") || {}
-
-      servers[name] ||= {}
-      server = servers[name]
-      if server["key"].nil? || server["crt"].nil? || server["csr"].nil?
-
-        Dir.chdir(cadir)
-        shell_out!("pkitool --server #{name}")
-
-        server["key"] = ::File.read(::File.join('keys', "#{name}.crt"))
-        server["crt"] = ::File.read(::File.join('keys', "#{name}.csr"))
-        server["csr"] = ::File.read(::File.join('keys', "#{name}.key"))
-
-        @dbag.put("servers", servers)
-      end
-
-      cleanup
-      return server
-    end
-
-
-    ## generate client.key, client.crt
-    def generate_client_cert(name)
-      clients = @dbag.get("clients") || {}
-
-      clients[name] ||= {}
-      client = clients[name]
-      if client["key"].nil? || client["crt"].nil? || client["csr"].nil?
-
-        Dir.chdir(cadir)
-        shell_out!("pkitool --client #{name}")
-
-        client["key"] = ::File.read(::File.join('keys', "#{name}.crt"))
-        client["crt"] = ::File.read(::File.join('keys', "#{name}.csr"))
-        client["csr"] = ::File.read(::File.join('keys', "#{name}.key"))
-
-        @dbag.put("clients", clients)
-      end
-
-      cleanup
-      return client
-    end
-
-
-
-    private
-
+    ## remove cadir
     def cleanup
       if ::File.directory?(cadir)
         ::FileUtils.rm_rf(cadir)
@@ -181,25 +223,7 @@ module OpenvpnConfig
     end
 
     def cadir
-      return @cadir unless @cadir.nil?
-
-      @cadir = ::File.join(Chef::Config[:file_cache_path], 'openvpn')
-      shell_out!("make-cadir #{@cadir}")
-      ## need to link openssl-*.cnf to openssl.cnf so that build-ca can find it.
-      ## find latest version
-      openssl_confs = []
-      ::Dir.entries(cadir).each do |e|
-        openssl_confs << e if e =~ /^openssl-*.cnf$/
-      end
-      ::File.link(openssl_confs.sort.last, 'openssl.cnf')
-
-      shell_out!("source vars")
-
-      ## override any vars sourced with argument
-      shell_out!("/bin/sh clean-all",
-        env: @vars
-      )
-      return @cadir
+      @cadir ||= ::File.join(Chef::Config[:file_cache_path], 'openvpn')
     end
   end
 end

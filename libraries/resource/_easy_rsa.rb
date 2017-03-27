@@ -6,7 +6,7 @@ class ChefOpenvpn
       resource_name :openvpn_easy_rsa
 
       default_action :create
-      allowed_actions :create, :delete
+      allowed_actions :create, :create_if_missing, :delete
 
       property :exists, [TrueClass, FalseClass]
 
@@ -16,7 +16,7 @@ class ChefOpenvpn
 
       property :cert_variables, Hash, default: {}
 
-      property :content, String, default: lazy { to_conf }
+      property :content, String
       property :path, String, desired_state: false,
                               default: lazy { ::File.join(OpenvpnConfig::BASE_PATH, name) }
 
@@ -31,21 +31,19 @@ class ChefOpenvpn
       end
 
       def ca_crt
-        @ca_crt ||= easy_rsa.generate_ca_cert
+        easy_rsa.generate_ca_cert
       end
 
       def dh
-        @dh ||= easy_rsa.generate_dh
+        easy_rsa.generate_dh
       end
 
       def server_certs
-        ca_crt
-        @server_certs ||= easy_rsa.generate_server_cert(key)
+        easy_rsa.generate_server_cert(key)
       end
 
       def client_certs
-        ca_crt
-        @client_certs ||= easy_rsa.generate_client_cert(key)
+        easy_rsa.generate_client_cert(key)
       end
     end
   end

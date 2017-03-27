@@ -6,7 +6,7 @@ class ChefOpenvpn
       resource_name :openvpn_credentials
 
       default_action :create
-      allowed_actions :create, :delete
+      allowed_actions :create, :create_if_missing, :delete
 
       property :exists, [TrueClass, FalseClass]
 

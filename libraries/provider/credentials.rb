@@ -17,10 +17,16 @@ class ChefOpenvpn
         current_resource
       end
 
+      def action_create_if_missing
+        converge_by("Create OpenVPN credentials file: #{new_resource}") do
+          credentials_file.run_action(:create_if_missing)
+        end if !current_resource.exists
+      end
+
       def action_create
         converge_by("Create OpenVPN credentials file: #{new_resource}") do
           credentials_file.run_action(:create)
-        end if !current_resource.exists || current_resource.content != new_resource.content
+        end if !current_resource.exists || current_resource.content != new_resource.content.chomp
       end
 
       def action_delete
@@ -35,7 +41,7 @@ class ChefOpenvpn
         @credentials_file ||= Chef::Resource::File.new(new_resource.path, run_context).tap do |r|
           r.path new_resource.path
           r.sensitive true
-          r.content new_resource.content
+          r.content new_resource.content.chomp
         end
       end
     end
