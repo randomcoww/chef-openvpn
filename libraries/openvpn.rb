@@ -130,7 +130,6 @@ module OpenvpnServer
 
     ## generate server.key, server.crt
     def generate_server_cert(name)
-      generate_ca_cert
       servers = @dbag.get("servers") || {}
 
       servers[name] ||= {}
@@ -154,7 +153,6 @@ module OpenvpnServer
 
     ## generate client.key, client.crt
     def generate_client_cert(name)
-      generate_ca_cert
       clients = @dbag.get("clients") || {}
 
       clients[name] ||= {}
