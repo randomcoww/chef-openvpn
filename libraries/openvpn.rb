@@ -92,8 +92,8 @@ module Openvpn
         ca_crt = ::File.read(::File.join('keys', 'ca.crt'))
         ca_key = ::File.read(::File.join('keys', 'ca.key'))
 
-        @dbag.set('ca.crt', ca_crt)
-        @dbag.set('ca.key', ca_key)
+        @dbag.put('ca.crt', ca_crt)
+        @dbag.put('ca.key', ca_key)
 
         ## server and client keys won't work after this. remove them
         @dbag.delete('servers')
@@ -118,7 +118,7 @@ module Openvpn
         shell_out!("/bin/sh build-dh")
 
         dh_pem = ::File.read(::File.join('keys', 'dh2048.pem'))
-        @dbag.set('dh.pem', dh_pem)
+        @dbag.put('dh.pem', dh_pem)
       else
         ::File.write(::File.join('keys', 'dh2048.pem'), dh_pem)
       end
@@ -140,7 +140,7 @@ module Openvpn
         server["crt"] = ::File.read(::File.join('keys', "#{name}.csr"))
         server["csr"] = ::File.read(::File.join('keys', "#{name}.key"))
 
-        @dbag.set("servers", servers)
+        @dbag.put("servers", servers)
       end
 
       cleanup
@@ -163,7 +163,7 @@ module Openvpn
         client["crt"] = ::File.read(::File.join('keys', "#{name}.csr"))
         client["csr"] = ::File.read(::File.join('keys', "#{name}.key"))
 
-        @dbag.set("clients", clients)
+        @dbag.put("clients", clients)
       end
 
       cleanup
