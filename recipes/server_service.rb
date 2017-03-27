@@ -1,3 +1,3 @@
-service "openvpn@#{::File.basename(OpenvpnServer::CONFIG_PATH, '.conf')}" do
+service "openvpn@#{::File.basename(Openvpn::SERVER_CONFIG, '.conf')}" do
   action [:enable, :start]
 end
