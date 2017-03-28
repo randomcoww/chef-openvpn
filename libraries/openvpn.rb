@@ -79,6 +79,7 @@ module OpenvpnConfig
     def initialize(data_bag, data_bag_item, vars={})
       @dbag = Dbag::Keystore.new(data_bag, data_bag_item)
       @cadir = ::File.join(Chef::Config[:file_cache_path], SecureRandom.hex)
+      @keydir = 'keys'
 
       ## these are normally set by ./vars
       @vars = {
@@ -87,7 +88,7 @@ module OpenvpnConfig
         "PKCS11TOOL" => "pkcs11-tool",
         "GREP" => "grep",
         "KEY_CONFIG" => ::File.join(@cadir, 'openssl-1.0.0.cnf'),
-        "KEY_DIR" => ::File.join(@cadir, 'keys'),
+        "KEY_DIR" => ::File.join(@cadir, @keydir),
         "PKCS11_MODULE_PATH" => "dummy",
         "PKCS11_PIN" => "dummy",
         "KEY_SIZE" => "2048",
@@ -123,7 +124,7 @@ module OpenvpnConfig
           env: @vars
         )
 
-        dh_pem = ::File.read(::File.join('keys', "dh#{@vars["KEY_SIZE"]}.pem"))
+        dh_pem = ::File.read(::File.join(@keydir, "dh#{@vars["KEY_SIZE"]}.pem"))
         @dbag.put('dh.pem', dh_pem)
       end
 
@@ -174,8 +175,8 @@ module OpenvpnConfig
         Dir.chdir(@cadir)
         yield
 
-        certs[name]["key"] = ::File.read(::File.join('keys', "#{name}.key"))
-        certs[name]["crt"] = ::File.read(::File.join('keys', "#{name}.crt"))
+        certs[name]["key"] = ::File.read(::File.join(@keydir, "#{name}.key"))
+        certs[name]["crt"] = ::File.read(::File.join(@keydir, "#{name}.crt"))
 
         @dbag.put(type, certs)
       end
@@ -198,8 +199,8 @@ module OpenvpnConfig
           env: @vars
         )
 
-        ca_crt = ::File.read(::File.join('keys', 'ca.crt'))
-        ca_key = ::File.read(::File.join('keys', 'ca.key'))
+        ca_crt = ::File.read(::File.join(@keydir, 'ca.crt'))
+        ca_key = ::File.read(::File.join(@keydir, 'ca.key'))
 
         @dbag.put('ca.crt', ca_crt)
         @dbag.put('ca.key', ca_key)
@@ -209,13 +210,13 @@ module OpenvpnConfig
         @dbag.delete('clients')
       else
 
-        if !::File.directory?('keys')
-          ::FileUtils.mkdir('keys')
+        if !::File.directory?(@keydir)
+          ::FileUtils.mkdir(@keydir)
         end
 
         ## these are needed to create server and client keys
-        ::File.write(::File.join('keys', 'ca.crt'), ca_crt)
-        ::File.write(::File.join('keys', 'ca.key'), ca_key)
+        ::File.write(::File.join(@keydir, 'ca.crt'), ca_crt)
+        ::File.write(::File.join(@keydir, 'ca.key'), ca_key)
       end
 
       return ca_crt
