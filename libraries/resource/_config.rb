@@ -1,7 +1,7 @@
 class ChefOpenvpn
   class Resource
     class Config < Chef::Resource
-      include ConfigGenerator
+      include OpenvpnConfig
 
       resource_name :openvpn_config
 

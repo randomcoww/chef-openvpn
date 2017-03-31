@@ -1,4 +1,8 @@
-module ConfigGenerator
+module OpenvpnConfig
+
+  BASE_PATH ||= '/etc/openvpn'
+  SERVER_CONFIG ||= '/etc/openvpn/server.conf'
+  CLIENT_CONFIG ||= '/etc/openvpn/client.conf'
 
   ## sample source config
   # {
@@ -24,7 +28,6 @@ module ConfigGenerator
   #   "fast-io" => true
   # }
 
-
   def generate_config(config_hash)
     out = []
 
@@ -40,13 +43,6 @@ module ConfigGenerator
     end
     return out.join($/)
   end
-end
-
-module OpenvpnConfig
-
-  BASE_PATH ||= '/etc/openvpn'
-  SERVER_CONFIG ||= '/etc/openvpn/server.conf'
-  CLIENT_CONFIG ||= '/etc/openvpn/client.conf'
 
   class EasyRsaHelper
 
