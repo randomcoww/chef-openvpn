@@ -1,3 +1,7 @@
+package 'procps' do
+  action :upgrade
+end
+
 instance_name = "openvpn_client"
 
 start_command = <<-EOF
