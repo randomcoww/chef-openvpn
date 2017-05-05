@@ -8,7 +8,7 @@ systemd_unit "openvpn@.service" do
       'After' => 'network-online.target'
     },
     'Service' => {
-      'Restart' => 'always',
+      'Restart' => 'on-failure',
       'RestartSec' => 10,
       "PrivateTmp" => true,
       "KillMode" => "mixed",
