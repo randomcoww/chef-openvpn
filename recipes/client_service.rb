@@ -1,4 +1,4 @@
-include_recipe "chef-openvpn::systemd_unit"
+include_recipe "openvpn::systemd_unit"
 
 service "openvpn@#{::File.basename(OpenvpnConfig::CLIENT_CONFIG, '.conf')}" do
   action [:enable, :start]
