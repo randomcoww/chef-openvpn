@@ -1,22 +1,16 @@
 class ChefOpenvpn
   class Resource
-    class Credentials < Chef::Resource
+    class CredentialsConfig < ChefOpenvpn::Resource::Config
       include Dbag
 
-      resource_name :openvpn_credentials
-
-      default_action :create
-      allowed_actions :create, :create_if_missing, :delete
-
-      property :exists, [TrueClass, FalseClass]
+      resource_name :openvpn_credentials_config
 
       property :data_bag, String
       property :data_bag_item, String
       property :key, String
 
-      property :content, String, default: lazy { to_conf }
       property :path, String, desired_state: false,
-                              default: lazy { ::File.join(OpenvpnConfig::BASE_PATH, name) }
+                              default: lazy { ::File.join(OpenvpnHelper::BASE_PATH, name) }
 
       private
 

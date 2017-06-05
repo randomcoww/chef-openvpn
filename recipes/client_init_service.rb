@@ -11,8 +11,8 @@ start-stop-daemon --start \
   --pidfile /run/#{instance_name}.pid \
   --exec /usr/sbin/openvpn -- \
   --writepid /run/#{instance_name}.pid \
-  --cd #{::File.dirname(OpenvpnConfig::CLIENT_CONFIG)} \
-  --config #{OpenvpnConfig::CLIENT_CONFIG} \
+  --cd #{::File.dirname(OpenvpnHelper::CLIENT_CONFIG)} \
+  --config #{OpenvpnHelper::CLIENT_CONFIG} \
   --daemon ovpn-#{instance_name}
 EOF
 
