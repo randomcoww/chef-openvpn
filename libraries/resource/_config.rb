@@ -19,7 +19,7 @@ class ChefOpenvpn
       private
 
       def to_conf
-        generate_config(config)
+        ConfigGenerator.generate_config(config)
       end
     end
   end
