@@ -1,5 +1,5 @@
 module OpenvpnHelper
-  
+
   BASE_PATH ||= '/etc/openvpn'
   SERVER_CONFIG ||= '/etc/openvpn/server.conf'
   CLIENT_CONFIG ||= '/etc/openvpn/client.conf'
@@ -29,7 +29,7 @@ module OpenvpnHelper
     #   "fast-io" => true
     # }
 
-    def self.generate_config(config_hash)
+    def self.generate_from_hash(config_hash)
       out = []
 
       config_hash.each do |k, v|
